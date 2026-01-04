@@ -18,10 +18,12 @@ def draw_cat_plot():
     # Create a copy for the categorical plot
     df_cat = df.copy()
     
-    # Melt the dataframe to get the variables in a single column
+    # Melt the dataframe
     df_cat = pd.melt(df_cat, 
                      id_vars=['cardio'],
-                     value_vars=['cholesterol', 'gluc', 'smoke', 'alco', 'active', 'overweight'])
+                     value_vars=['cholesterol', 'gluc', 'smoke', 'alco', 'active', 'overweight'],
+                     var_name='variable',
+                     value_name='value')
     
     # Create the categorical plot
     fig = sns.catplot(data=df_cat,
@@ -29,12 +31,10 @@ def draw_cat_plot():
                       x='variable',
                       y='value',
                       hue='cardio',
-                      col='variable',
-                      col_wrap=3,
-                      height=4,
-                      aspect=1.3)
+                      height=5,
+                      aspect=2)
     
-    # Adjust labels
+    # Set labels
     fig.set_axis_labels('variable', 'total')
     
     fig.savefig('catplot.png')
