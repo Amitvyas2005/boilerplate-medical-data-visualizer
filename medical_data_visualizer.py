@@ -3,58 +3,79 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 
-# 1
-df = None
+# Load the data
+df = pd.read_csv('medical_examination.csv')
 
-# 2
-df['overweight'] = None
+# Add overweight column
+df['overweight'] = (df['weight'] / (df['height'] / 100) ** 2 > 25).astype(int)
 
-# 3
+# Normalize cholesterol and glucose
+df['cholesterol'] = (df['cholesterol'] > 1).astype(int)
+df['gluc'] = (df['gluc'] > 1).astype(int)
 
 
-# 4
 def draw_cat_plot():
-    # 5
-    df_cat = None
-
-
-    # 6
-    df_cat = None
+    # Create a copy for the categorical plot
+    df_cat = df.copy()
     
-
-    # 7
-
-
-
-    # 8
-    fig = None
-
-
-    # 9
+    # Melt the dataframe to get the variables in a single column
+    df_cat = pd.melt(df_cat, 
+                     id_vars=['cardio'],
+                     value_vars=['cholesterol', 'gluc', 'smoke', 'alco', 'active', 'overweight'])
+    
+    # Create the categorical plot
+    fig = sns.catplot(data=df_cat,
+                      kind='bar',
+                      x='variable',
+                      y='value',
+                      hue='cardio',
+                      col='variable',
+                      col_wrap=3,
+                      height=4,
+                      aspect=1.3)
+    
+    # Adjust labels
+    fig.set_axis_labels('variable', 'total')
+    
     fig.savefig('catplot.png')
     return fig
 
 
-# 10
 def draw_heat_map():
-    # 11
-    df_heat = None
-
-    # 12
-    corr = None
-
-    # 13
-    mask = None
-
-
-
-    # 14
-    fig, ax = None
-
-    # 15
-
-
-
-    # 16
+    # Clean the data for heatmap
+    df_heat = df.copy()
+    
+    # Remove rows where diastolic pressure is greater than systolic
+    df_heat = df_heat[df_heat['ap_lo'] <= df_heat['ap_hi']]
+    
+    # Remove height outside 2.5th to 97.5th percentile
+    height_min = df_heat['height'].quantile(0.025)
+    height_max = df_heat['height'].quantile(0.975)
+    df_heat = df_heat[(df_heat['height'] >= height_min) & (df_heat['height'] <= height_max)]
+    
+    # Remove weight outside 2.5th to 97.5th percentile
+    weight_min = df_heat['weight'].quantile(0.025)
+    weight_max = df_heat['weight'].quantile(0.975)
+    df_heat = df_heat[(df_heat['weight'] >= weight_min) & (df_heat['weight'] <= weight_max)]
+    
+    # Calculate correlation matrix
+    corr = df_heat.corr()
+    
+    # Create mask for upper triangle
+    mask = np.triu(np.ones_like(corr, dtype=bool))
+    
+    # Create figure and plot heatmap
+    fig, ax = plt.subplots(figsize=(12, 10))
+    sns.heatmap(corr, 
+                mask=mask,
+                annot=True,
+                fmt='.1g',
+                cmap='coolwarm',
+                center=0,
+                square=True,
+                linewidths=1,
+                cbar_kws={"shrink": 0.8},
+                ax=ax)
+    
     fig.savefig('heatmap.png')
     return fig
